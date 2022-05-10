@@ -6,25 +6,32 @@ import { BunjangProduct, BunjangProps } from '../../interfaces/bunjang.interface
 @Injectable()
 export class CrawlingService {
   getNaverProductLists = async ({ keyword }: { keyword: string }) => {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
     const itemResult = { products: [], count: 0 };
-    const queries = { itemSize: 10, pageNumber: 1, keyword: keyword };
+    const queries: NaverSearchParams = {
+      size: 10,
+      page: 1,
+      query: keyword,
+      recommendKeyword: true,
+      searchOrderParamType: 'DEFAULT',
+      transactionStatuses: 'ON_SALE',
+    };
     let loadedItems = await this.loadArticles(queries, page);
     itemResult.count = loadedItems.count;
-    while (queries.itemSize >= loadedItems.products.length) {
+    while (queries.size >= loadedItems.products.length) {
       itemResult.products.push(...loadedItems.products);
-      if (loadedItems.products.length !== queries.itemSize) {
+      if (loadedItems.products.length !== queries.size) {
         break;
       }
-      queries.pageNumber++;
+      queries.page++;
       loadedItems = await this.loadArticles(queries, page);
     }
     await browser.close();
     return itemResult;
   };
   getBunjangProductList = async ({ keyword }: { keyword: string }) => {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
     const itemResult: { products: BunjangProduct[]; count: number } = { products: [], count: 0 };
     const queries: BunjangProps = {
@@ -63,9 +70,9 @@ export class CrawlingService {
     return { products: onSaleProductList, count: onSaleProductList.length };
   };
 
-  loadArticles = async (queries: { itemSize: number; pageNumber: number; keyword: string }, page: Page) => {
+  loadArticles = async (queries: NaverSearchParams, page: Page) => {
     const pageObject = await page.goto(
-      `https://apis.naver.com/cafe-web/cafe-search-api/v4.0/trade-search/all?query=${queries.keyword}&page=${queries.pageNumber}&size=${queries.itemSize}&recommendKeyword=true&searchOrderParamType=DEFAULT&transactionStatuses=ON_SALE`,
+      `https://apis.naver.com/cafe-web/cafe-search-api/v4.0/trade-search/all?${this.objectToQueryParams(queries)}`,
     );
     const { tradeArticleList, totalCount }: { tradeArticleList: unknown[]; totalCount: number } = (
       await pageObject.json()
@@ -86,4 +93,14 @@ export class CrawlingService {
     });
     return queryString;
   };
+}
+
+// query=${queries.keyword}&page=${queries.pageNumber}&size=${queries.itemSize}&recommendKeyword=true&searchOrderParamType=DEFAULT&transactionStatuses=ON_SALE
+interface NaverSearchParams {
+  query: string;
+  page: number;
+  size: number;
+  recommendKeyword: boolean;
+  searchOrderParamType: string;
+  transactionStatuses: string;
 }
