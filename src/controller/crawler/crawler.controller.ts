@@ -4,9 +4,16 @@ import { CrawlingService } from '../../services/crawling/crawling.service';
 @Controller('crawler')
 export class CrawlerController {
   constructor(private crawlingService: CrawlingService) {}
-  @Get()
-  async getItems(@Query() query: { keyword: string }): Promise<unknown> {
-    const itemResult = await this.crawlingService.getProductLists(query);
+  @Get('/naver-cafe')
+  async getNaverCafeItems(@Query() query: { keyword: string }): Promise<unknown> {
+    const itemResult = await this.crawlingService.getNaverProductLists(query);
+    console.log(itemResult);
+    return itemResult;
+  }
+
+  @Get('/bunjang')
+  async getBunjangItems(@Query() query: { keyword: string }): Promise<unknown> {
+    const itemResult = await this.crawlingService.getBunjangProductList(query);
     console.log(itemResult);
     return itemResult;
   }
