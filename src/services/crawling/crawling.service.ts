@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import puppeteer = require('puppeteer');
 import { Page } from 'puppeteer';
 import { BunjangProduct, BunjangProps } from '../../interfaces/bunjang.interface';
+import { objectToQueryParams } from '../../utils/objectToQueryParams';
 
 @Injectable()
 export class CrawlingService {
@@ -58,9 +59,7 @@ export class CrawlingService {
   };
 
   loadBunjangArticles = async (queries: BunjangProps, page: Page) => {
-    const pageObject = await page.goto(
-      `https://api.bunjang.co.kr/api/1/find_v2.json?${this.objectToQueryParams(queries)}`,
-    );
+    const pageObject = await page.goto(`https://api.bunjang.co.kr/api/1/find_v2.json?${objectToQueryParams(queries)}`);
     const { list, num_found }: { list: []; num_found: number } = await pageObject.json();
     return { list, num_found };
   };
@@ -72,26 +71,13 @@ export class CrawlingService {
 
   loadArticles = async (queries: NaverSearchParams, page: Page) => {
     const pageObject = await page.goto(
-      `https://apis.naver.com/cafe-web/cafe-search-api/v4.0/trade-search/all?${this.objectToQueryParams(queries)}`,
+      `https://apis.naver.com/cafe-web/cafe-search-api/v4.0/trade-search/all?${objectToQueryParams(queries)}`,
     );
     const { tradeArticleList, totalCount }: { tradeArticleList: unknown[]; totalCount: number } = (
       await pageObject.json()
     ).result;
 
     return { products: tradeArticleList, count: totalCount };
-  };
-
-  objectToQueryParams = (obj) => {
-    const keys = Object.keys(obj);
-    let queryString = '';
-    keys.forEach((key, i) => {
-      if (i === 0) {
-        queryString += `${key}=${obj[key]}`;
-      } else {
-        queryString += `&${key}=${obj[key]}`;
-      }
-    });
-    return queryString;
   };
 }
 
