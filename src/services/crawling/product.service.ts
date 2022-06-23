@@ -17,7 +17,7 @@ export class ProductService {
     const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
     const pageObject = await page.goto(
-      `https://apis.naver.com/cafe-web/cafe-articleapi/cafes/${queries.cafeId}/articles/${queries.articleId}/siblings?limit=${queries.limit}&fromAllArticleList=true&page=${queries.page}`,
+      `https://apis.naver.com/cafe-web/cafe-articleapi/v2/cafes/${queries.cafeId}/articles/${queries.articleId}/siblings?limit=${queries.limit}&fromAllArticleList=true&page=${queries.page}`,
     );
     return (await pageObject.json()).result;
   }
